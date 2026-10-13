@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html ng-app="inventoryApp">
+<head>
+    <title>Inventory System</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+</head>
+
+<body ng-controller="inventoryCtrl">
+
+    <h2>Inventory Management System</h2>
+
+    <h3>Add Product</h3>
+
+    Name: <input type="text" ng-model="name">
+    <br><br>
+
+    Quantity: <input type="number" ng-model="quantity">
+    <br><br>
+
+    Price: <input type="number" ng-model="price">
+    <br><br>
+
+    <button ng-click="addProduct()">Add Product</button>
+
+    <h3>Product List</h3>
+
+    <table border="1">
+        <tr>
+            <th>Name</th>
+            <th>Quantity</th>
+            <th>Price</th>
+            <th>Actions</th>
+        </tr>
+
+        <tr ng-repeat="p in products">
+            <td>{{p.name}}</td>
+            <td>{{p.quantity}}</td>
+            <td>{{p.price | currency:"₹"}}</td>
+            <td>
+                <button ng-click="updateProduct(p)">Update</button>
+                <button ng-click="deleteProduct(p._id)">Delete</button>
+            </td>
+        </tr>
+    </table>
+
+    <script>
+        var app = angular.module("inventoryApp", []);
+
+        app.controller("inventoryCtrl", function($scope, $http) {
+
+            $scope.products = [];
+
+            // Read products
+            $scope.loadProducts = function() {
+                $http.get("/products").then(function(response) {
+                    $scope.products = response.data;
+                });
+            };
+
+            // Add product
+            $scope.addProduct = function() {
+                var product = {
+                    name: $scope.name,
+                    quantity: $scope.quantity,
+                    price: $scope.price
+                };
+
+                $http.post("/products", product).then(function() {
+                    $scope.name = "";
+                    $scope.quantity = "";
+                    $scope.price = "";
+                    $scope.loadProducts();
+                });
+            };
+
+            // Update product
+            $scope.updateProduct = function(p) {
+                var name = prompt("Enter new name", p.name);
+                if (name === null) return;
+
+                var quantity = prompt("Enter new quantity", p.quantity);
+                if (quantity === null) return;
+
+                var price = prompt("Enter new price", p.price);
+                if (price === null) return;
+
+                var product = {
+                    name: name,
+                    quantity: Number(quantity),
+                    price: Number(price)
+                };
+
+                $http.put("/products/" + p._id, product).then(function() {
+                    $scope.loadProducts();
+                });
+            };
+
+            // Delete product
+            $scope.deleteProduct = function(id) {
+                $http.delete("/products/" + id).then(function() {
+                    $scope.loadProducts();
+                });
+            };
+
+            $scope.loadProducts();
+
+        });
+    </script>
+
+</body>
+</html>
